@@ -27,6 +27,16 @@ export const zh = {
   noBranches: '暂无分支。',
   detached: '分离头指针',
   refresh: '刷新',
+  commitTitle: '提交改动',
+  commitMessage: '提交信息',
+  commitBtn: '提交',
+  commitDone: '提交成功',
+  pullBtn: '拉取更新',
+  pullDone: '拉取成功',
+  uncommittedChanges: '未提交改动',
+  noUncommitted: '无未提交改动',
+  history: '提交历史',
+  logEmpty: '暂无提交。',
 } satisfies Record<string, string>
 
 /** Git manager locale key union. */
@@ -59,4 +69,14 @@ export const en = {
   noBranches: 'No branches.',
   detached: 'detached HEAD',
   refresh: 'Refresh',
+  commitTitle: 'Commit changes',
+  commitMessage: 'Commit message',
+  commitBtn: 'Commit',
+  commitDone: 'Committed',
+  pullBtn: 'Pull',
+  pullDone: 'Pulled',
+  uncommittedChanges: 'Uncommitted changes',
+  noUncommitted: 'No uncommitted changes',
+  history: 'History',
+  logEmpty: 'No commits.',
 } satisfies Record<GitManagerLocaleKey, string>

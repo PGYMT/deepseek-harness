@@ -36,3 +36,13 @@ export interface GitOpResult {
   /** Human-readable message, suitable for UI display. */
   message: string
 }
+
+/** One commit history entry. */
+export interface GitLogEntry {
+  /** Abbreviated commit hash. */
+  hash: string
+  /** Decorated refs, e.g. `HEAD -> BETA1.1, origin/BETA1`. */
+  refs: string
+  /** Commit subject (first line). */
+  subject: string
+}

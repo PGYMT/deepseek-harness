@@ -12,7 +12,9 @@
 
 .summary h3,
 .create h3,
-.lists h3 {
+.lists h3,
+.commit h3,
+.history h3 {
   margin: 0 0 8px;
 }
 
@@ -78,4 +80,56 @@
 
 .switchButton {
   flex-shrink: 0;
+}
+
+.toggle {
+  margin-bottom: 8px;
+}
+
+.changeList,
+.logList {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.changeRow {
+  padding: 2px 0;
+  font-size: 12px;
+}
+
+.commitRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.commitInput {
+  flex: 1;
+  min-width: 200px;
+  padding: 6px 8px;
+}
+
+.logRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.logHash {
+  color: var(--ds-text-accent, #4d6bfe);
+  flex-shrink: 0;
+}
+
+.logRefs {
+  color: var(--ds-text-secondary, #666);
+  flex-shrink: 0;
+}
+
+.logSubject {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

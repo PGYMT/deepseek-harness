@@ -1,7 +1,7 @@
 /** Git branch management Settings tab. */
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { GitBranch, GitBranches, GitOpResult, GitStatus } from '@deepseek-ai/dsh-api-remotes/client'
+import type { GitBranch, GitBranches, GitLogEntry, GitOpResult, GitStatus } from '@deepseek-ai/dsh-api-remotes/client'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import css from './GitManagerSettingsTab.module.css'
 
@@ -12,6 +12,9 @@ export interface GitManagerSettingsTabInjected {
   checkout: (branch: string) => Promise<GitOpResult>
   createBranch: (name: string, base: string | null) => Promise<GitOpResult>
   push: (branch: string) => Promise<GitOpResult>
+  commit: (message: string) => Promise<GitOpResult>
+  pull: () => Promise<GitOpResult>
+  log: (count: number) => Promise<GitLogEntry[]>
 }
 
 /** Full component props assembled by the Settings slot renderer. */
@@ -27,12 +30,15 @@ type ViewState =
 
 /** Render the Git branch management section. */
 export function GitManagerSettingsTab(props: GitManagerSettingsTabProps): ReactNode {
-  const { status: loadStatus, branches: loadBranches, checkout, createBranch, push, t } = props
+  const { status: loadStatus, branches: loadBranches, checkout, createBranch, push, commit, pull, log: loadLog, t } = props
 
   const [state, setState] = useState<ViewState>({ status: 'loading' })
   const [request, setRequest] = useState(0)
   const [name, setName] = useState('')
   const [base, setBase] = useState('')
+  const [commitMsg, setCommitMsg] = useState('')
+  const [logEntries, setLogEntries] = useState<GitLogEntry[]>([])
+  const [showChanges, setShowChanges] = useState(false)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
 
@@ -43,9 +49,12 @@ export function GitManagerSettingsTab(props: GitManagerSettingsTabProps): ReactN
 
   useEffect(() => {
     let current = true
-    void Promise.all([loadStatus(), loadBranches()]).then(
-      ([git, branches]) => {
-        if (current) setState({ status: 'ready', git, branches })
+    void Promise.all([loadStatus(), loadBranches(), loadLog(20)]).then(
+      ([git, branches, log]) => {
+        if (current) {
+          setState({ status: 'ready', git, branches })
+          setLogEntries(log)
+        }
       },
       (error: unknown) => {
         if (current) {
@@ -54,14 +63,15 @@ export function GitManagerSettingsTab(props: GitManagerSettingsTabProps): ReactN
       },
     )
     return () => { current = false }
-  }, [loadStatus, loadBranches, request])
+  }, [loadStatus, loadBranches, loadLog, request])
 
-  const run = useCallback(async (action: () => Promise<GitOpResult>, successText: string): Promise<void> => {
+  const run = useCallback(async (action: () => Promise<GitOpResult>, successText: string, onSuccess?: () => void): Promise<void> => {
     setBusy(true)
     setNotice(null)
     try {
       const result = await action()
       setNotice(result.ok ? successText : `${t('operationFailed')}: ${result.message}`)
+      if (result.ok) onSuccess?.()
     } catch (error) {
       setNotice(`${t('operationFailed')}: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
@@ -138,10 +148,45 @@ export function GitManagerSettingsTab(props: GitManagerSettingsTabProps): ReactN
         >
           {t('pushCurrent')}
         </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => { void run(() => pull(), t('pullDone'), reload) }}
+        >
+          {t('pullBtn')}
+        </button>
         <button type="button" onClick={reload}>{t('refresh')}</button>
       </div>
 
       {notice !== null ? <p className={css.notice} role="status">{notice}</p> : null}
+
+      <div className={css.commit}>
+        <h3>{t('commitTitle')}</h3>
+        <button type="button" className={css.toggle} onClick={() => { setShowChanges(value => !value) }}>
+          {git.clean ? t('noUncommitted') : `${t('uncommittedChanges')} (${git.changes.length})`}
+        </button>
+        {showChanges && git.changes.length > 0 ? (
+          <ul className={css.changeList}>
+            {git.changes.map(change => <li key={change} className={css.changeRow}><code>{change}</code></li>)}
+          </ul>
+        ) : null}
+        <div className={css.commitRow}>
+          <input
+            type="text"
+            className={css.commitInput}
+            placeholder={t('commitMessage')}
+            value={commitMsg}
+            onChange={(event) => { setCommitMsg(event.currentTarget.value) }}
+          />
+          <button
+            type="button"
+            disabled={busy || commitMsg.trim() === ''}
+            onClick={() => { void run(() => commit(commitMsg.trim()), t('commitDone'), () => { setCommitMsg(''); reload() }) }}
+          >
+            {t('commitBtn')}
+          </button>
+        </div>
+      </div>
 
       <div className={css.create}>
         <h3>{t('newBranch')}</h3>
@@ -182,6 +227,21 @@ export function GitManagerSettingsTab(props: GitManagerSettingsTabProps): ReactN
 
         <h3>{t('remoteBranches')}</h3>
         {remoteBranches.length === 0 ? <p className={css.status}>{t('noBranches')}</p> : <ul className={css.branchList}>{remoteBranches.map(renderBranch)}</ul>}
+      </div>
+
+      <div className={css.history}>
+        <h3>{t('history')}</h3>
+        {logEntries.length === 0 ? <p className={css.status}>{t('logEmpty')}</p> : (
+          <ul className={css.logList}>
+            {logEntries.map(entry => (
+              <li key={entry.hash} className={css.logRow}>
+                <code className={css.logHash}>{entry.hash}</code>
+                {entry.refs !== '' ? <code className={css.logRefs}>{entry.refs}</code> : null}
+                <span className={css.logSubject}>{entry.subject}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   )

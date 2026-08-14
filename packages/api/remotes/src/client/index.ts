@@ -15,7 +15,7 @@ export type {} from '@deepseek-ai/dsh-commands/remote'
 export type {} from '@deepseek-ai/dsh-goal/remote'
 export type {} from '@deepseek-ai/dsh-host-plugin-inventory/remote'
 export type {} from '@deepseek-ai/dsh-host-git-manager/remote'
-export type { GitStatus, GitBranch, GitBranches, GitOpResult } from '@deepseek-ai/dsh-host-git-manager/types'
+export type { GitStatus, GitBranch, GitBranches, GitLogEntry, GitOpResult } from '@deepseek-ai/dsh-host-git-manager/types'
 export type {} from '@deepseek-ai/dsh-message-feedback/remote'
 // The forwarded-event allowlist's selection seat: without it in the consumer's
 // compilation face `TypertRemoteEvent` is `never` and every `$on` call fails.

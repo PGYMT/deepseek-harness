@@ -14,7 +14,7 @@ import type {} from '@deepseek-ai/dsh-cmdline'
 import { TypertRemoteService, Remote } from '@deepseek-ai/dsh-typert-protocol'
 // Typert-generated ./typert and ./remote artifacts import Zod at runtime.
 import type {} from 'zod'
-import type { GitBranch, GitBranches, GitOpResult, GitStatus } from './types.ts'
+import type { GitBranch, GitBranches, GitLogEntry, GitOpResult, GitStatus } from './types.ts'
 
 export type * from './types.ts'
 
@@ -136,6 +136,49 @@ export class GitManagerGateway extends TypertRemoteService {
       return { ok: false, message: result.stderr.trim() || '推送失败' }
     }
     return { ok: true, message: `已推送到 ${remote}/${branch}` }
+  }
+
+  @Remote('commit')
+  commit(message: string): GitOpResult {
+    if (message.trim() === '') {
+      return { ok: false, message: '提交信息不能为空' }
+    }
+    const add = runGit(['add', '-A'], this.repo)
+    if (!add.ok) {
+      return { ok: false, message: add.stderr.trim() || '暂存失败' }
+    }
+    const result = runGit(['commit', '-m', message], this.repo)
+    if (!result.ok) {
+      return { ok: false, message: result.stderr.trim() || '提交失败' }
+    }
+    return { ok: true, message: '提交成功' }
+  }
+
+  @Remote('pull')
+  pull(): GitOpResult {
+    const result = runGit(['pull'], this.repo)
+    if (!result.ok) {
+      return { ok: false, message: result.stderr.trim() || '拉取失败' }
+    }
+    return { ok: true, message: '拉取成功' }
+  }
+
+  @Remote('log')
+  log(count: number): GitLogEntry[] {
+    const n = Math.min(Math.max(Math.floor(count), 1), 50)
+    const result = runGit(['log', '--oneline', '--decorate', '-n', String(n)], this.repo)
+    const entries: GitLogEntry[] = []
+    if (result.ok) {
+      for (const line of result.stdout.split('\n')) {
+        const trimmed = line.trim()
+        if (trimmed === '') continue
+        const match = /^([0-9a-f]+)\s*(?:\(([^)]*)\))?\s*(.*)$/.exec(trimmed)
+        if (match !== null) {
+          entries.push({ hash: match[1] ?? '', refs: match[2] ?? '', subject: match[3] ?? '' })
+        }
+      }
+    }
+    return entries
   }
 
   /** Defer exit so the Remote response reaches the client before teardown. */

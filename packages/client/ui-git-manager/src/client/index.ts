@@ -44,6 +44,9 @@ export function apply(ctx: ClientContext): void {
     checkout: branch => call(() => ctx.remote.gitManager.checkout(branch)),
     createBranch: (name, base) => call(() => ctx.remote.gitManager['create-branch'](name, base)),
     push: branch => call(() => ctx.remote.gitManager.push(branch)),
+    commit: message => call(() => ctx.remote.gitManager.commit(message)),
+    pull: () => call(() => ctx.remote.gitManager.pull()),
+    log: count => call(() => ctx.remote.gitManager.log(count)),
   })
 
   ctx.slots.inject('settings.plugins.tab', () => ctx.slots.register({
