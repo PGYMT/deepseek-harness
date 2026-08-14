@@ -162,6 +162,11 @@ export class GitManagerGateway extends TypertRemoteService {
 
   @Remote('pull')
   pull(): GitOpResult {
+    // 先检测上游：无跟踪分支时给出友好提示，而非原始 git 报错
+    const upstream = runGit(['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'], this.repo)
+    if (!upstream.ok) {
+      return { ok: false, message: '当前分支未设置上游，无法拉取。请切换到 master 或 BETA1 分支后拉取官方更新。' }
+    }
     const result = runGit(['pull'], this.repo)
     if (!result.ok) {
       return { ok: false, message: result.stderr.trim() || '拉取失败' }
