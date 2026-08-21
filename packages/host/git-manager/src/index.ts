@@ -30,7 +30,6 @@ interface GitRun {
 
 /** Strip ANSI escape sequences so git/hook output reads cleanly in the UI. */
 function stripAnsi(text: string): string {
-  // eslint-disable-next-line no-control-regex
   return text.replace(/\u001b\[[0-9;]*m/g, '')
 }
 
@@ -39,8 +38,8 @@ function runGit(args: string[], cwd: string): GitRun {
   const result = spawnSync('git', args, { cwd, encoding: 'utf8' })
   return {
     ok: result.status === 0,
-    stdout: result.stdout ?? '',
-    stderr: stripAnsi(result.stderr ?? ''),
+    stdout: result.stdout,
+    stderr: stripAnsi(result.stderr),
   }
 }
 
