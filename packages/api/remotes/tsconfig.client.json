@@ -43,9 +43,6 @@
       "path": "../../host/plugin-inventory"
     },
     {
-      "path": "../../host/git-manager"
-    },
-    {
       "path": "../../interaction/commands"
     },
     {
