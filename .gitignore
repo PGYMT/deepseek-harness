@@ -5,6 +5,9 @@ lib/
 *.tsbuildinfo
 pnpm-debug.log
 .pnpm-store/
+.npm-cache/
+.xdg-cache/
+.xdg-data/
 .cache/
 examples/*/*.jsonl
 .storages/
